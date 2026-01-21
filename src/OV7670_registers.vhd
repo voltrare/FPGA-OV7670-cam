@@ -50,7 +50,7 @@ begin
 
   regs <= sreg;
   with sreg select reg_loaded  <= '1' when x"FFFF", '0' when others;
-  with sw(0) select colour_reg <= x"1200" when '1', x"1204" when others;
+  with sw(0) select colour_reg <= x"1214" when '1', x"1200" when others;
   with sw(1) select fps_reg <= x"6bca" when '1', x"6b4a" when others;
   with sw(2) select test2<= x"4fff" when '1', x"4fb3" when others;
   with sw(3) select test3<= x"50ff" when '1', x"50b3" when others;
