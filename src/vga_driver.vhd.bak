@@ -35,7 +35,7 @@ architecture Behavioral of vga_driver is
 begin
 
     process(iVGA_CLK)
-        -- Variables for address calculation (10 bits to match logic below)
+        -- Variables for address calculation
         variable x_mem : unsigned(9 downto 0);
         variable y_mem : unsigned(9 downto 0);
         variable address_calc : unsigned(19 downto 0);
@@ -55,15 +55,15 @@ begin
                 hCount <= hCount + 1;
             end if;
 
-            -- Sync Signals (Active Low)
+            -- Sync Signals
             if hCount >= hStartSync and hCount < hEndSync then
-                hs <= '0'; 
+                hs <= '0'; -- VGA standard is usually negative sync
             else
                 hs <= '1';
             end if;
 
             if vCount >= vStartSync and vCount < vEndSync then
-                vs <= '0'; 
+                vs <= '0'; -- VGA standard is usually negative sync
             else
                 vs <= '1';
             end if;
@@ -75,17 +75,13 @@ begin
                 blank <= '1';
             end if;
 
-            -- Address Calculation
-            -- 1. Downscale coordinates (640->320, 480->240)
-            -- 2. Pad with '0' to make them 10 bits (FIXED HERE)
-            x_mem := "0" & hCount(9 downto 1); 
-            y_mem := "0" & vCount(9 downto 1); 
+            -- Address Calculation for 320x240 buffer displayed on 640x480
+            -- We read the pixel at (hCount/2, vCount/2)
+            -- Address = y*320 + x
+            x_mem := hCount(9 downto 1); -- Divide by 2
+            y_mem := vCount(9 downto 1); -- Divide by 2
             
-            -- 3. Calculate Address: y*320 + x
-            -- 320 = 256 + 64.  
-            -- y*320 = (y<<8) + (y<<6)
-            
-            -- (2 bits + 10 bits + 8 bits = 20 bits)
+            -- 320 = 256 + 64.  y*320 = (y<<8) + (y<<6)
             address_calc := ("00" & y_mem & "00000000") + ("0000" & y_mem & "000000");
             address_calc := address_calc + x_mem;
             
@@ -93,7 +89,12 @@ begin
 
             -- Output Colors
             if blank = '0' then
-                -- RGB444 Format
+                -- RGB444 Format in buffer: xxxx RRRR GGGG BBBB
+                -- High byte: xxxxRRRR (Bits 11 to 8 of valid color) -> buffer(11 downto 8)
+                -- Low byte:  GGGGBBBB (Bits 7 to 4 are G, 3 to 0 are B)
+                
+                -- Note: vga_driver in original code had mixed mapping. 
+                -- Assuming XRGB logic:
                 r <= buffer_data(11 downto 8);
                 g <= buffer_data(7 downto 4);
                 b <= buffer_data(3 downto 0);

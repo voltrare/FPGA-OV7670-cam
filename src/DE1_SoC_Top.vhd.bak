@@ -100,7 +100,7 @@ begin
         sioc            => OV7670_SIOC,
         siod            => OV7670_SIOD,
         sw              => SW,
-        key             => KEY(2 downto 0) -- Reset/Resend control
+        key             => KEY -- Reset/Resend control
     );
 
     -- 2. Framebuffer (Dual Port RAM)
